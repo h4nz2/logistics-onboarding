@@ -37,6 +37,10 @@ Used to track quantity of products sold, useful for predicting when the item wil
 
 My understanding is that a vendor is meant as a supplier who can supply specific products.
 
+## OnboardingFileUpload
+
+Use to store the file uploaded during onboarding, so that it can be process in the background (assuming that the files can get big enough that waiting processing them synchronously would take too long).
+
 ---
 
 ## Notes

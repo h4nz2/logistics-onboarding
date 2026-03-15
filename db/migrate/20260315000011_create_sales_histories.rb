@@ -3,6 +3,7 @@ class CreateSalesHistories < ActiveRecord::Migration[8.1]
     create_table :sales_histories do |t|
       t.references :product, null: false, foreign_key: true
       t.date :date, null: false
+      t.integer :quantity, null: false
 
       t.timestamps
     end
