@@ -2,8 +2,11 @@
 
 ## Company
 
-The core model representing the ecommerce platform.
-`completed_onboarding_steps` are stored as an array attribute - simply approach, which should be good enough for this case. It tells us which steps have been completed. The steps themselved I would store as constants.
+The core model representing the ecommerce platform. Stores company-level configuration such as lead time, stock days, and forecasting days. The available onboarding steps are defined as constants on this model, while their completion status is tracked via the `OnboardingStep` model.
+
+## OnboardingStep
+
+Tracks the status of each onboarding step for a company. Uses integer enums for both the step identifier and its status (pending, completed, or skipped).
 
 ## Integration
 
