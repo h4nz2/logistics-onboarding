@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_15_000011) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_15_000013) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,6 +46,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000011) do
     t.datetime "updated_at", null: false
     t.index ["company_id", "provider"], name: "index_integrations_on_company_id_and_provider", unique: true
     t.index ["company_id"], name: "index_integrations_on_company_id"
+  end
+
+  create_table "onboarding_file_uploads", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.string "processing_status", default: "pending", null: false
+    t.string "step", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_onboarding_file_uploads_on_company_id"
+  end
+
+  create_table "onboarding_steps", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "status", default: 0, null: false
+    t.integer "step", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "step"], name: "index_onboarding_steps_on_company_id_and_step", unique: true
+    t.index ["company_id"], name: "index_onboarding_steps_on_company_id"
   end
 
   create_table "products", force: :cascade do |t|
@@ -111,6 +130,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000011) do
   add_foreign_key "bundles_products", "bundles"
   add_foreign_key "bundles_products", "products"
   add_foreign_key "integrations", "companies"
+  add_foreign_key "onboarding_file_uploads", "companies"
+  add_foreign_key "onboarding_steps", "companies"
   add_foreign_key "products_vendors", "products"
   add_foreign_key "products_vendors", "vendors"
   add_foreign_key "purchase_order_items", "products"
