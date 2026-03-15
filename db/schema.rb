@@ -10,14 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_15_000013) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_15_000014) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "bundles", force: :cascade do |t|
+    t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_bundles_on_company_id"
   end
 
   create_table "bundles_products", id: false, force: :cascade do |t|
@@ -29,7 +31,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000013) do
   end
 
   create_table "companies", force: :cascade do |t|
-    t.string "completed_onboarding_steps", default: [], array: true
     t.datetime "created_at", null: false
     t.integer "forecasting_days"
     t.integer "lead_days"
@@ -68,9 +69,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000013) do
   end
 
   create_table "products", force: :cascade do |t|
+    t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_products_on_company_id"
   end
 
   create_table "products_vendors", id: false, force: :cascade do |t|
@@ -88,24 +91,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000013) do
     t.bigint "purchase_order_id", null: false
     t.integer "quantity", null: false
     t.datetime "updated_at", null: false
-    t.bigint "vendor_id", null: false
     t.index ["product_id"], name: "index_purchase_order_items_on_product_id"
     t.index ["purchase_order_id"], name: "index_purchase_order_items_on_purchase_order_id"
-    t.index ["vendor_id"], name: "index_purchase_order_items_on_vendor_id"
   end
 
   create_table "purchase_orders", force: :cascade do |t|
-    t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.date "order_date", null: false
     t.datetime "updated_at", null: false
-    t.index ["company_id"], name: "index_purchase_orders_on_company_id"
+    t.bigint "vendor_id", null: false
+    t.index ["vendor_id"], name: "index_purchase_orders_on_vendor_id"
   end
 
   create_table "sales_histories", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.date "date", null: false
     t.bigint "product_id", null: false
+    t.integer "quantity", null: false
     t.datetime "updated_at", null: false
     t.index ["product_id", "date"], name: "index_sales_histories_on_product_id_and_date"
     t.index ["product_id"], name: "index_sales_histories_on_product_id"
@@ -127,17 +129,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000013) do
     t.index ["company_id"], name: "index_warehouses_on_company_id"
   end
 
+  add_foreign_key "bundles", "companies"
   add_foreign_key "bundles_products", "bundles"
   add_foreign_key "bundles_products", "products"
   add_foreign_key "integrations", "companies"
   add_foreign_key "onboarding_file_uploads", "companies"
   add_foreign_key "onboarding_steps", "companies"
+  add_foreign_key "products", "companies"
   add_foreign_key "products_vendors", "products"
   add_foreign_key "products_vendors", "vendors"
   add_foreign_key "purchase_order_items", "products"
   add_foreign_key "purchase_order_items", "purchase_orders"
-  add_foreign_key "purchase_order_items", "vendors"
-  add_foreign_key "purchase_orders", "companies"
+  add_foreign_key "purchase_orders", "vendors"
   add_foreign_key "sales_histories", "products"
   add_foreign_key "vendors", "companies"
   add_foreign_key "warehouses", "companies"

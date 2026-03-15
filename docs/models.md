@@ -23,11 +23,11 @@ Tells us how many products were ordered and when they are expected to be deliver
 
 ## Bundle
 
-My understanding is that a bundle consists of multiple products that are being sold as one.
+My understanding is that a bundle consists of multiple products that are being sold as one. Belongs to a company, as bundles are company-specific groupings.
 
 ## Product
 
-Represents the actual items being sold. I added a many-to-many relationship to vendors, as I can imagine that it might be possible that some products can be ordered from multiple vendors. When starting, I would also consider starting with a simple one-to-many relationship and switching to many-to-many later.
+Represents the actual items being sold. Belongs to a company, as products are managed per company. I added a many-to-many relationship to vendors, as I can imagine that it might be possible that some products can be ordered from multiple vendors. When starting, I would also consider starting with a simple one-to-many relationship and switching to many-to-many later.
 
 ## SalesHistory
 

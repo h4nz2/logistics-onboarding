@@ -1,4 +1,5 @@
 class Product < ApplicationRecord
+  belongs_to :company
   has_and_belongs_to_many :vendors
   has_and_belongs_to_many :bundles
   has_many :purchase_order_items, dependent: :destroy

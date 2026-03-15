@@ -16,6 +16,8 @@ class Company < ApplicationRecord
   has_many :vendors, dependent: :destroy
   has_many :purchase_orders, through: :vendors
   has_many :onboarding_file_uploads, dependent: :destroy
+  has_many :products, dependent: :destroy
+  has_many :bundles, dependent: :destroy
 
   validates :name, presence: true
 end
