@@ -5,8 +5,6 @@ class CreateCompanies < ActiveRecord::Migration[8.1]
       t.integer :lead_days
       t.integer :stock_days
       t.integer :forecasting_days
-      t.string :completed_onboarding_steps, array: true, default: []
-
       t.timestamps
     end
   end
