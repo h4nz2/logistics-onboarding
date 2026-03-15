@@ -1,0 +1,123 @@
+# This file is auto-generated from the current state of the database. Instead
+# of editing this file, please use the migrations feature of Active Record to
+# incrementally modify your database, and then regenerate this schema definition.
+#
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
+#
+# It's strongly recommended that you check this file into your version control system.
+
+ActiveRecord::Schema[8.1].define(version: 2026_03_15_000011) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_catalog.plpgsql"
+
+  create_table "bundles", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "bundles_products", id: false, force: :cascade do |t|
+    t.bigint "bundle_id", null: false
+    t.bigint "product_id", null: false
+    t.index ["bundle_id", "product_id"], name: "index_bundles_products_on_bundle_id_and_product_id", unique: true
+    t.index ["bundle_id"], name: "index_bundles_products_on_bundle_id"
+    t.index ["product_id"], name: "index_bundles_products_on_product_id"
+  end
+
+  create_table "companies", force: :cascade do |t|
+    t.string "completed_onboarding_steps", default: [], array: true
+    t.datetime "created_at", null: false
+    t.integer "forecasting_days"
+    t.integer "lead_days"
+    t.string "name", null: false
+    t.integer "stock_days"
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "integrations", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.jsonb "configuration", default: {}
+    t.datetime "created_at", null: false
+    t.string "provider", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "provider"], name: "index_integrations_on_company_id_and_provider", unique: true
+    t.index ["company_id"], name: "index_integrations_on_company_id"
+  end
+
+  create_table "products", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "products_vendors", id: false, force: :cascade do |t|
+    t.bigint "product_id", null: false
+    t.bigint "vendor_id", null: false
+    t.index ["product_id", "vendor_id"], name: "index_products_vendors_on_product_id_and_vendor_id", unique: true
+    t.index ["product_id"], name: "index_products_vendors_on_product_id"
+    t.index ["vendor_id"], name: "index_products_vendors_on_vendor_id"
+  end
+
+  create_table "purchase_order_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "expected_delivery_date"
+    t.bigint "product_id", null: false
+    t.bigint "purchase_order_id", null: false
+    t.integer "quantity", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.index ["product_id"], name: "index_purchase_order_items_on_product_id"
+    t.index ["purchase_order_id"], name: "index_purchase_order_items_on_purchase_order_id"
+    t.index ["vendor_id"], name: "index_purchase_order_items_on_vendor_id"
+  end
+
+  create_table "purchase_orders", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.date "order_date", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_purchase_orders_on_company_id"
+  end
+
+  create_table "sales_histories", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.bigint "product_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_id", "date"], name: "index_sales_histories_on_product_id_and_date"
+    t.index ["product_id"], name: "index_sales_histories_on_product_id"
+  end
+
+  create_table "vendors", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_vendors_on_company_id"
+  end
+
+  create_table "warehouses", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_warehouses_on_company_id"
+  end
+
+  add_foreign_key "bundles_products", "bundles"
+  add_foreign_key "bundles_products", "products"
+  add_foreign_key "integrations", "companies"
+  add_foreign_key "products_vendors", "products"
+  add_foreign_key "products_vendors", "vendors"
+  add_foreign_key "purchase_order_items", "products"
+  add_foreign_key "purchase_order_items", "purchase_orders"
+  add_foreign_key "purchase_order_items", "vendors"
+  add_foreign_key "purchase_orders", "companies"
+  add_foreign_key "sales_histories", "products"
+  add_foreign_key "vendors", "companies"
+  add_foreign_key "warehouses", "companies"
+end

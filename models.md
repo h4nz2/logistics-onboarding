@@ -15,7 +15,7 @@ Not further specified in the UI, so I just left it with a simple name and associ
 
 ## PurchaseOrder
 
-Assuming this acts more or less as an invoice with several products on it. For our purposes, the date of the order seemed the only important attribute, as by comparing it to the delivery date, it would help us understand how long it usually takes for a product to be delivered after being ordered.
+Assuming this acts more or less as an invoice with several products on it. For our purposes, the date of the order seemed the only important attribute, as by comparing it to the delivery date, it would help us understand how long it usually takes for a product to be delivered after being ordered. Maybe adding another identifer which can be imported would also be useful.
 
 ## PurchaseOrderItem
 
