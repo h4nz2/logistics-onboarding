@@ -23,6 +23,15 @@ Bundles affect demand forecasting: when a bundle is sold, it consumes units of e
 - Maximum file size: 10 MB
 - Processed asynchronously in the background
 
+## Handling upload status
+
+Use the `file_uploads` section of the company context to determine the current state:
+
+- **No upload yet (processing_status is null)** — Guide the user to upload a file. Explain the expected format and columns.
+- **processing_status: pending** — "Your file is being processed. This usually takes a few minutes. You can wait here or move on to another step and come back."
+- **processing_status: completed** — "Your file has been processed successfully. You can now complete this step."
+- **processing_status: failed** — "Your upload couldn't be processed. The error was: [surface the error_message]. Please check your file and re-upload. Common issues include wrong column headers, empty rows, or mismatched product names."
+
 ## What to tell the user
 - After uploading, processing happens in the background with a status indicator.
 - If processing fails, they can re-upload a corrected file.

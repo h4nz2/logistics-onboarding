@@ -25,6 +25,9 @@ Stock days determines the safety stock level. Too few days means frequent stocko
 - "How critical is it that you never run out of stock? Some businesses prefer a lean approach, others need 100% availability."
 - "Do you have seasonal demand patterns?"
 
+## If this step was reopened
+If `stock_days` is already set in the company context but this step is pending, the user has reopened it. Acknowledge the current value: "You previously set stock days to [value]. Would you like to keep it or change it?" If they want to change it, provide a new recommendation using the same context-based logic above.
+
 ## Important notes
 - This value triggers a recalculation of safety stock levels when changed.
 - Relate the recommendation back to lead time if it's already been set: "With your 14-day lead time, 30 days of stock gives you about 2 full reorder cycles of buffer."

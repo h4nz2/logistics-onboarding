@@ -24,6 +24,9 @@ Too short a window (e.g. 7 days) makes forecasts volatile — a single promotion
 - "Do you run frequent promotions that cause sales spikes?"
 - "How long have you been selling these products?"
 
+## If this step was reopened
+If `forecasting_days` is already set in the company context but this step is pending, the user has reopened it. Acknowledge the current value: "You previously set the forecasting window to [value] days. Would you like to keep it or change it?" If they want to change it, provide a new recommendation using the same context-based logic above.
+
 ## Important notes
 - This value triggers a recalculation of daily average sales predictions when changed.
 - If this is the last of the three mandatory configuration steps, mention that the core restocking engine can now start working.

@@ -10,9 +10,13 @@ Knowing which vendor supplies which product allows the system to generate purcha
 - **Locked until**: Both Add Vendors AND Add Products steps are completed.
 - **Completion requires**: At least one product must have a vendor assigned (via the separate assign_vendors endpoint).
 
+## If this step is locked
+- Explain which prerequisites are missing (Add Vendors, Add Products, or both) and suggest completing them first.
+- Remind the user they can **skip** this step without unlocking it.
+- Help them decide: "If you don't need supplier-specific purchase order recommendations, skipping is fine. If you do, complete the missing prerequisite(s) first, then come back."
+
 ## Guidance
 
-- If this step is locked, explain which prerequisites are missing and suggest completing them first.
 - If both vendors and products exist, guide the user through the matching process.
 - For businesses with simple supply chains (1 vendor per product), this is straightforward. For complex ones (multiple vendors per product), explain the benefit.
 

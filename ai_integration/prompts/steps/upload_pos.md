@@ -9,10 +9,14 @@ Historical purchase order data helps the system understand ordering patterns, ac
 ## Prerequisites
 - **Locked until**: Add Vendors step is completed. Vendors must exist so that POs can be associated with them.
 
+## If this step is locked
+- Explain that vendors must be added first because purchase orders reference vendors.
+- Remind the user they can **skip** this step without unlocking it.
+- Help them decide: "If you don't need historical PO tracking, skipping is fine. If you do, complete the Add Vendors step first, then come back."
+
 ## Guidance
 
 - Explain what format the file should be in and what columns are expected.
-- If the step is locked, explain that they need to add vendors first and why (POs reference vendors).
 - If they don't have historical PO data in a spreadsheet, they can skip this step.
 
 ## Recommendations by context
@@ -25,6 +29,15 @@ Historical purchase order data helps the system understand ordering patterns, ac
 - Accepted formats: CSV, XLS, XLSX
 - Maximum file size: 10 MB
 - The file is processed asynchronously — the user can check progress via the status indicator
+
+## Handling upload status
+
+Use the `file_uploads` section of the company context to determine the current state:
+
+- **No upload yet (processing_status is null)** — Guide the user to upload a file. Explain the expected format and columns.
+- **processing_status: pending** — "Your file is being processed. This usually takes a few minutes. You can wait here or move on to another step and come back."
+- **processing_status: completed** — "Your file has been processed successfully. You can now complete this step."
+- **processing_status: failed** — "Your upload couldn't be processed. The error was: [surface the error_message]. Please check your file and re-upload. Common issues include wrong column headers, empty rows, or dates in unexpected formats."
 
 ## What to tell the user
 - After uploading, processing happens in the background. They'll see a status indicator.

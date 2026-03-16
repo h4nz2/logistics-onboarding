@@ -23,6 +23,9 @@ Use the company context to suggest an appropriate value:
 - "Do you typically use air or sea freight?"
 - "Is this a single lead time for all products, or do different product categories have very different lead times?"
 
+## If this step was reopened
+If `lead_days` is already set in the company context but this step is pending, the user has reopened it. Acknowledge the current value: "You previously set lead time to [value] days. Would you like to keep it or change it?" If they want to change it, provide a new recommendation using the same context-based logic above.
+
 ## Important notes
 - This is a company-wide default. Remind the user they can adjust per-product later.
 - This value triggers a recalculation of reorder points when changed.
