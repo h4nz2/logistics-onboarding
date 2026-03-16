@@ -121,6 +121,14 @@ File uploads during onboarding are processed asynchronously via two background j
 
 Both jobs are dispatched from the file uploads controller (`POST /api/v1/onboarding/file_uploads`) immediately after the file is persisted. The `OnboardingFileUpload` record's `processing_status` field allows the frontend to poll for completion via `GET /api/v1/onboarding/file_uploads/:id`.
 
+## Recalculation Jobs
+
+- **RecalculateRestockingJob** — Enqueued when `lead_days`, `stock_days`, or `forecasting_days` is updated via the corresponding onboarding step. Receives the company ID and the name of the changed attribute. Depending on the attribute, it recalculates reorder points (lead_days), safety stock levels (stock_days), or daily average sales predictions (forecasting_days). Currently a stub — the actual recalculation logic will be implemented as part of the core restocking engine.
+
+## Step Completion Side Effects
+
+Step controllers can trigger side effects after a step is successfully persisted by overriding the `after_complete` hook in `BaseStepController`. This follows the same Template Method pattern used by `step_name`, `step_locked?`, and other overridable hooks. The base implementation is a no-op; subclasses override it to enqueue background jobs or perform other post-completion work. Currently, the three configuration steps (lead_time, stock_days, forecasting_period) use this hook to enqueue `RecalculateRestockingJob`.
+
 ---
 
 ## Notes
@@ -247,7 +255,7 @@ PATCH /api/v1/onboarding/welcome
 
 ### `PATCH /api/v1/onboarding/lead_time`
 
-Sets the company's lead time and completes the step. Mandatory. Returns a validation error if `lead_days` is missing or not a positive integer.
+Sets the company's lead time and completes the step. Mandatory. Returns a validation error if `lead_days` is missing or not a positive integer. On completion, enqueues `RecalculateRestockingJob` to recalculate reorder points based on the new lead time.
 
 **Params:** `lead_days` (positive integer, required)
 
@@ -275,7 +283,7 @@ PATCH /api/v1/onboarding/lead_time
 
 ### `PATCH /api/v1/onboarding/stock_days`
 
-Sets the company's days of stock and completes the step. Mandatory. Returns a validation error if `stock_days` is missing or not a positive integer.
+Sets the company's days of stock and completes the step. Mandatory. Returns a validation error if `stock_days` is missing or not a positive integer. On completion, enqueues `RecalculateRestockingJob` to recalculate safety stock levels based on the new stock days value.
 
 **Params:** `stock_days` (positive integer, required)
 
@@ -303,7 +311,7 @@ PATCH /api/v1/onboarding/stock_days
 
 ### `PATCH /api/v1/onboarding/forecasting_period`
 
-Sets the company's forecasting period and completes the step. Mandatory. Returns a validation error if `forecasting_days` is missing or not a positive integer.
+Sets the company's forecasting period and completes the step. Mandatory. Returns a validation error if `forecasting_days` is missing or not a positive integer. On completion, enqueues `RecalculateRestockingJob` to recalculate daily average sales and all dependent predictions based on the new forecasting window.
 
 **Params:** `forecasting_days` (positive integer, required)
 
@@ -601,6 +609,36 @@ GET /api/v1/onboarding/file_uploads/1
     "processing_status": "pending",
     "error_message": null,
     "created_at": "2026-03-16T10:00:00Z"
+  }
+}
+```
+
+## Sync Progress
+
+### `GET /api/v1/onboarding/sync_progress`
+
+Returns the current sync progress for the company's data imports from integrations. Each resource type (products, warehouses) reports how many items have been discovered (`total`) and how many have been fetched (`fetched`). The top-level `status` is derived: `"pending"` when no sync has started (all totals are 0), `"in_progress"` when at least one resource is partially fetched, and `"completed"` when all resources are fully fetched.
+
+The progress is provided by fetcher service classes (`ProductFetcher`, `WarehouseFetcher`) which are currently stubs returning zero counts. When real integration sync logic is implemented, these services will query actual sync state.
+
+**Params:** none
+
+**Request:**
+
+```
+GET /api/v1/onboarding/sync_progress
+```
+
+**Response:**
+
+```json
+{
+  "sync_progress": {
+    "status": "pending",
+    "resources": {
+      "products": { "total": 0, "fetched": 0 },
+      "warehouses": { "total": 0, "fetched": 0 }
+    }
   }
 }
 ```

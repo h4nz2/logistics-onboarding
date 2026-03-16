@@ -24,6 +24,10 @@ module Api
         def step_name
           "forecasting_period"
         end
+
+        def after_complete
+          RecalculateRestockingJob.perform_later(@company.id, "forecasting_days")
+        end
       end
     end
   end

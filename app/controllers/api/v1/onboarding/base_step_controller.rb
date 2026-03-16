@@ -84,6 +84,7 @@ module Api
           onboarding_step.status = :completed
 
           if onboarding_step.save
+            after_complete
             render json: {
               step: { name: step_name, status: "completed" },
               company: company_json
@@ -91,6 +92,11 @@ module Api
           else
             render_error(onboarding_step.errors.full_messages)
           end
+        end
+
+        # Hook for subclasses to trigger side effects after step completion (e.g., enqueue background jobs).
+        # Called after the step is persisted but before the response is rendered.
+        def after_complete
         end
 
         def company_json

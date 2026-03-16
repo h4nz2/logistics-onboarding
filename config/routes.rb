@@ -49,6 +49,7 @@ Rails.application.routes.draw do
         end
 
         resources :file_uploads, only: [ :create, :show ]
+        resource :sync_progress, only: [ :show ], controller: "sync_progress"
       end
 
       resources :integrations, only: [ :index, :create, :update, :destroy ]
