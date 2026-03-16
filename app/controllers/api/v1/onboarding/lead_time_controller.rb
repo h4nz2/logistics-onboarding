@@ -3,6 +3,10 @@ module Api
     module Onboarding
       class LeadTimeController < BaseStepController
         def update
+          unless params.key?(:lead_days)
+            return render_error("lead_days is required", status: :unprocessable_entity)
+          end
+
           lead_days = params[:lead_days].to_i
 
           if lead_days <= 0

@@ -3,6 +3,10 @@ module Api
     module Onboarding
       class StockDaysController < BaseStepController
         def update
+          unless params.key?(:stock_days)
+            return render_error("stock_days is required", status: :unprocessable_entity)
+          end
+
           stock_days = params[:stock_days].to_i
 
           if stock_days <= 0

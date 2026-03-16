@@ -2,7 +2,7 @@ module Api
   module V1
     module Onboarding
       class BaseStepController < BaseController
-        before_action :check_step_locked
+        before_action :check_step_locked, only: :update
         before_action :check_file_upload_required, only: :update
 
         def skip
@@ -15,6 +15,25 @@ module Api
 
           if onboarding_step.save
             render json: { step: { name: step_name, status: "skipped" } }
+          else
+            render_error(onboarding_step.errors.full_messages)
+          end
+        end
+
+        def reopen
+          onboarding_step = @company.onboarding_steps.find_by(step: step_name)
+
+          unless onboarding_step&.status.in?(%w[completed skipped])
+            return render_error("Step is not completed or skipped", status: :unprocessable_entity)
+          end
+
+          onboarding_step.status = :pending
+
+          if onboarding_step.save
+            render json: {
+              step: { name: step_name, status: "pending" },
+              company: company_json
+            }
           else
             render_error(onboarding_step.errors.full_messages)
           end

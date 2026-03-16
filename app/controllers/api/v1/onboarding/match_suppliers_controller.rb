@@ -3,6 +3,15 @@ module Api
     module Onboarding
       class MatchSuppliersController < BaseStepController
         def update
+          # TODO: Consider whether partial assignments should be allowed
+          # (e.g. only some products have vendors assigned)
+          unless @company.products.joins(:vendors).exists?
+            return render_error(
+              "At least one product must have a vendor assigned. Use PATCH /api/v1/products/assign_vendors to assign vendors to products.",
+              status: :unprocessable_entity
+            )
+          end
+
           complete_step!
         end
 
