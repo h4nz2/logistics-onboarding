@@ -4,6 +4,8 @@ class Company < ApplicationRecord
     lead_time
     stock_days
     forecasting_period
+    add_vendors
+    add_products
     upload_pos
     match_suppliers
     bundles
@@ -12,6 +14,7 @@ class Company < ApplicationRecord
 
   has_many :onboarding_steps, dependent: :destroy
   has_many :integrations, dependent: :destroy
+  has_many :integration_requests, dependent: :destroy
   has_many :warehouses, dependent: :destroy
   has_many :vendors, dependent: :destroy
   has_many :purchase_orders, through: :vendors

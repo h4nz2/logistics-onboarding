@@ -6,6 +6,8 @@ module Api
         "lead_time" => { mandatory: true },
         "stock_days" => { mandatory: true },
         "forecasting_period" => { mandatory: true },
+        "add_vendors" => { mandatory: false },
+        "add_products" => { mandatory: false },
         "upload_pos" => { mandatory: false },
         "match_suppliers" => { mandatory: false },
         "bundles" => { mandatory: false },

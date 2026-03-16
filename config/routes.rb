@@ -17,6 +17,12 @@ Rails.application.routes.draw do
         resource :lead_time, only: [ :update ], controller: "lead_time"
         resource :stock_days, only: [ :update ], controller: "stock_days"
         resource :forecasting_period, only: [ :update ], controller: "forecasting_period"
+        resource :add_vendors, only: [ :update ], controller: "add_vendors" do
+          patch :skip, on: :member
+        end
+        resource :add_products, only: [ :update ], controller: "add_products" do
+          patch :skip, on: :member
+        end
         resource :upload_pos, only: [ :update ], controller: "upload_pos" do
           patch :skip, on: :member
         end
@@ -34,8 +40,9 @@ Rails.application.routes.draw do
       end
 
       resources :integrations, only: [ :index, :create, :update, :destroy ]
+      resources :integration_requests, only: [ :index, :create ]
       resources :vendors, only: [ :index, :create ]
-      resources :products, only: [ :index ] do
+      resources :products, only: [ :index, :create ] do
         collection do
           patch :assign_vendors
         end

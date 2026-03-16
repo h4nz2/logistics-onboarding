@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_15_000014) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_15_212601) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -37,6 +37,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000014) do
     t.string "name", null: false
     t.integer "stock_days"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "integration_requests", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_integration_requests_on_company_id"
   end
 
   create_table "integrations", force: :cascade do |t|
@@ -132,6 +141,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000014) do
   add_foreign_key "bundles", "companies"
   add_foreign_key "bundles_products", "bundles"
   add_foreign_key "bundles_products", "products"
+  add_foreign_key "integration_requests", "companies"
   add_foreign_key "integrations", "companies"
   add_foreign_key "onboarding_file_uploads", "companies"
   add_foreign_key "onboarding_steps", "companies"

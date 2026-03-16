@@ -11,6 +11,18 @@ module Api
         }
       end
 
+      def create
+        product = @company.products.build(product_params)
+
+        if product.save
+          render json: {
+            product: { id: product.id, name: product.name, vendor_ids: [] }
+          }, status: :created
+        else
+          render_error(product.errors.full_messages)
+        end
+      end
+
       def assign_vendors
         assignments = params.require(:assignments)
 
@@ -35,6 +47,12 @@ module Api
         }
       rescue ActiveRecord::RecordNotFound => e
         render_error(e.message, status: :not_found)
+      end
+
+      private
+
+      def product_params
+        params.require(:product).permit(:name)
       end
     end
   end
