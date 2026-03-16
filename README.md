@@ -128,6 +128,10 @@ Both jobs are dispatched from the file uploads controller (`POST /api/v1/onboard
 - I only added minimum attributes needed to satisfy the requirements. I assume that in real life there would be many more.
 - For each model, I would also add `created_at` and `updated_at` timestamps, as they are useful in many ways and do not cost much to store.
 
+# Testing
+
+The project uses **RSpec** (`rspec-rails`) for testing. Tests are request specs covering all API endpoints (happy path). Run with `bundle exec rspec`.
+
 # REST API
 
 All endpoints are under `/api/v1`. The company is currently resolved automatically (will be derived from authenticated user in the future).

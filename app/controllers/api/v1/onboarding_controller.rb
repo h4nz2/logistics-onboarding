@@ -3,15 +3,12 @@ module Api
     class OnboardingController < BaseController
       def show
         steps = build_steps
-        current_step = steps.find { |s| s[:status] == "pending" && !s[:locked] }
-
         completed = steps.all? { |s| s[:status].in?(%w[completed skipped]) }
 
         render json: {
           company: company_json,
           onboarding: {
             completed: completed,
-            current_step: current_step&.dig(:name),
             steps: steps
           }
         }
