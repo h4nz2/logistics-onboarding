@@ -963,16 +963,6 @@ DELETE /api/v1/integrations/1
 
 **Response:** `204 No Content`
 
-## AI Onboarding Guide
-
-The onboarding flow includes an AI-powered assistant that provides step-specific guidance. See `ai_integration/docs/architecture.md` for full details. Key design decisions:
-
-- **Layered context**: The LLM prompt is assembled from 4 layers — system prompt, dynamic company context, step-specific context, and conversation history. Only the current step's context is loaded at a time.
-- **Conversation per step**: Each step gets a fresh conversation. Previous answers are reflected in the company context, so the agent can reference them without needing old chat history.
-- **Structured response format**: The system prompt enforces a consistent output structure (Recommendation / Rationale / Next consideration) with format variants for clarifying questions, locked steps, and skip decisions. A few-shot example anchors behavior across model versions.
-- **Conversation management**: The backend runtime caps conversations at 20 turns per step, summarizes older turns when approaching limits, and enforces a context window guard at 80% capacity. The system prompt instructs the LLM to redirect off-topic questions and nudge stuck users toward a decision.
-- **Static domain knowledge**: Industry benchmarks and recommendations are authored in step prompt files rather than relying on LLM training data, making them auditable and updatable.
-
 ## Integration Requests
 
 ### `GET /api/v1/integration_requests`
@@ -1027,3 +1017,13 @@ POST /api/v1/integration_requests
   }
 }
 ```
+
+# AI Onboarding Guide
+
+The onboarding flow includes an AI-powered assistant that provides step-specific guidance. See `ai_integration/docs/architecture.md` for full details. Key design decisions:
+
+- **Layered context**: The LLM prompt is assembled from 4 layers — system prompt, dynamic company context, step-specific context, and conversation history. Only the current step's context is loaded at a time.
+- **Conversation per step**: Each step gets a fresh conversation. Previous answers are reflected in the company context, so the agent can reference them without needing old chat history.
+- **Structured response format**: The system prompt enforces a consistent output structure (Recommendation / Rationale / Next consideration) with format variants for clarifying questions, locked steps, and skip decisions. A few-shot example anchors behavior across model versions.
+- **Conversation management**: The backend runtime caps conversations at 20 turns per step, summarizes older turns when approaching limits, and enforces a context window guard at 80% capacity. The system prompt instructs the LLM to redirect off-topic questions and nudge stuck users toward a decision.
+- **Static domain knowledge**: Industry benchmarks and recommendations are authored in step prompt files rather than relying on LLM training data, making them auditable and updatable.
