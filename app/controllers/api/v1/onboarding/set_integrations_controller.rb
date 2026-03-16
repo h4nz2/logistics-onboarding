@@ -9,7 +9,7 @@ module Api
         private
 
         def step_name
-          "integrations"
+          "set_integrations"
         end
       end
     end

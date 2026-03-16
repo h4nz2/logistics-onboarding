@@ -20,10 +20,6 @@ module Api
         def step_name
           "forecasting_period"
         end
-
-        def mandatory?
-          true
-        end
       end
     end
   end

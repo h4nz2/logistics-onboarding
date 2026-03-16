@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_15_212601) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_16_090114) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -61,6 +61,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_212601) do
   create_table "onboarding_file_uploads", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.datetime "created_at", null: false
+    t.text "error_message"
     t.string "processing_status", default: "pending", null: false
     t.string "step", null: false
     t.datetime "updated_at", null: false

@@ -20,10 +20,6 @@ module Api
         def step_name
           "lead_time"
         end
-
-        def mandatory?
-          true
-        end
       end
     end
   end

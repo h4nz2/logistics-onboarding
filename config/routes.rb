@@ -11,9 +11,7 @@ Rails.application.routes.draw do
       resource :onboarding, only: [ :show ], controller: "onboarding"
 
       namespace :onboarding do
-        resource :welcome, only: [ :update ], controller: "welcome" do
-          patch :skip, on: :member
-        end
+        resource :welcome, only: [ :update ], controller: "welcome"
         resource :lead_time, only: [ :update ], controller: "lead_time"
         resource :stock_days, only: [ :update ], controller: "stock_days"
         resource :forecasting_period, only: [ :update ], controller: "forecasting_period"
@@ -41,8 +39,8 @@ Rails.application.routes.draw do
 
       resources :integrations, only: [ :index, :create, :update, :destroy ]
       resources :integration_requests, only: [ :index, :create ]
-      resources :vendors, only: [ :index, :create ]
-      resources :products, only: [ :index, :create ] do
+      resources :vendors, only: [ :index, :show, :create, :update, :destroy ]
+      resources :products, only: [ :index, :show, :create, :update, :destroy ] do
         collection do
           patch :assign_vendors
         end

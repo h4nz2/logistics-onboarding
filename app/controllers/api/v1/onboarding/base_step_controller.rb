@@ -3,6 +3,7 @@ module Api
     module Onboarding
       class BaseStepController < BaseController
         before_action :check_step_locked
+        before_action :check_file_upload_required, only: :update
 
         def skip
           if mandatory?
@@ -25,8 +26,12 @@ module Api
           raise NotImplementedError, "Subclasses must define step_name"
         end
 
+        def step_config
+          Company::ONBOARDING_STEP_CONFIG[step_name] || {}
+        end
+
         def mandatory?
-          false
+          step_config[:mandatory] || false
         end
 
         def step_locked?
@@ -37,9 +42,21 @@ module Api
           nil
         end
 
+        def requires_file_upload?
+          step_config[:requires_file_upload] || false
+        end
+
         def check_step_locked
           if step_locked?
             render json: { error: "Step is locked", lock_reason: lock_reason }, status: :unprocessable_entity
+          end
+        end
+
+        def check_file_upload_required
+          return unless requires_file_upload?
+
+          unless @company.onboarding_file_uploads.where(step: step_name).exists?
+            render_error("File must be uploaded before completing this step. Use POST /api/v1/onboarding/file_uploads to upload.", status: :unprocessable_entity)
           end
         end
 

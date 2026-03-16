@@ -20,10 +20,6 @@ module Api
         def step_name
           "stock_days"
         end
-
-        def mandatory?
-          true
-        end
       end
     end
   end

@@ -1,19 +1,6 @@
 module Api
   module V1
     class OnboardingController < BaseController
-      STEP_CONFIG = {
-        "welcome" => { mandatory: false },
-        "lead_time" => { mandatory: true },
-        "stock_days" => { mandatory: true },
-        "forecasting_period" => { mandatory: true },
-        "add_vendors" => { mandatory: false },
-        "add_products" => { mandatory: false },
-        "upload_pos" => { mandatory: false },
-        "match_suppliers" => { mandatory: false },
-        "bundles" => { mandatory: false },
-        "integrations" => { mandatory: false }
-      }.freeze
-
       def show
         steps = build_steps
         current_step = steps.find { |s| s[:status] == "pending" && !s[:locked] }
@@ -34,20 +21,29 @@ module Api
 
       def build_steps
         onboarding_steps = @company.onboarding_steps.index_by(&:step)
+        file_uploads = @company.onboarding_file_uploads.index_by(&:step)
 
         Company::ONBOARDING_STEPS.each_with_index.map do |step_name, position|
           record = onboarding_steps[step_name]
-          config = STEP_CONFIG[step_name]
+          config = Company::ONBOARDING_STEP_CONFIG[step_name]
           locked = step_locked?(step_name)
 
-          {
+          step_data = {
             name: step_name,
             position: position,
             status: record&.status || "pending",
             mandatory: config[:mandatory],
             locked: locked,
-            lock_reason: locked ? lock_reason(step_name) : nil
+            lock_reason: locked ? lock_reason(step_name) : nil,
+            unlock_steps: locked ? unlock_steps(step_name, onboarding_steps) : nil
           }
+
+          if config[:requires_file_upload]
+            upload = file_uploads[step_name]
+            step_data[:file_upload] = upload ? file_upload_json(upload) : nil
+          end
+
+          step_data
         end
       end
 
@@ -55,6 +51,8 @@ module Api
         case step_name
         when "upload_pos"
           !@company.vendors.exists?
+        when "match_suppliers"
+          !@company.vendors.exists? || !@company.products.exists?
         else
           false
         end
@@ -63,8 +61,41 @@ module Api
       def lock_reason(step_name)
         case step_name
         when "upload_pos"
-          "Requires vendors to be added first"
+          "Complete 'Add Vendors' to unlock this step"
+        when "match_suppliers"
+          missing = []
+          missing << "'Add Vendors'" unless @company.vendors.exists?
+          missing << "'Add Products'" unless @company.products.exists?
+          "Complete #{missing.join(' and ')} to unlock this step"
         end
+      end
+
+      def unlock_steps(step_name, onboarding_steps)
+        required = case step_name
+                   when "upload_pos"
+                     @company.vendors.exists? ? [] : ["add_vendors"]
+                   when "match_suppliers"
+                     steps = []
+                     steps << "add_vendors" unless @company.vendors.exists?
+                     steps << "add_products" unless @company.products.exists?
+                     steps
+                   else
+                     []
+                   end
+
+        required.map do |name|
+          record = onboarding_steps[name]
+          { name: name, status: record&.status || "pending" }
+        end
+      end
+
+      def file_upload_json(upload)
+        {
+          id: upload.id,
+          processing_status: upload.processing_status,
+          error_message: upload.error_message,
+          created_at: upload.created_at
+        }
       end
 
       def company_json

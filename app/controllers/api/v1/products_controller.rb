@@ -11,6 +11,15 @@ module Api
         }
       end
 
+      def show
+        product = @company.products.find(params[:id])
+        render json: {
+          product: { id: product.id, name: product.name, vendor_ids: product.vendor_ids }
+        }
+      rescue ActiveRecord::RecordNotFound
+        render_error("Product not found", status: :not_found)
+      end
+
       def create
         product = @company.products.build(product_params)
 
@@ -21,6 +30,27 @@ module Api
         else
           render_error(product.errors.full_messages)
         end
+      end
+
+      def update
+        product = @company.products.find(params[:id])
+        if product.update(product_params)
+          render json: {
+            product: { id: product.id, name: product.name, vendor_ids: product.vendor_ids }
+          }
+        else
+          render_error(product.errors.full_messages)
+        end
+      rescue ActiveRecord::RecordNotFound
+        render_error("Product not found", status: :not_found)
+      end
+
+      def destroy
+        product = @company.products.find(params[:id])
+        product.destroy
+        head :no_content
+      rescue ActiveRecord::RecordNotFound
+        render_error("Product not found", status: :not_found)
       end
 
       def assign_vendors

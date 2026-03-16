@@ -27,19 +27,27 @@ User to sets the days of stock. This step must be completed.
 
 Users sets wow far back (in days) should we look when calculating daily average sales of a product. This step must be completed.
 
-### 5. Upload existing Purchas orders
+### 5. Add vendors
+
+User can add vendors (suppliers) that supply their products. This step was added because later steps (Upload Purchase Orders, Match Suppliers) depend on vendors existing in the system. Without a dedicated step, there would be no clear point in the onboarding flow for the user to enter this data. This step is optional.
+
+### 6. Add products
+
+User can add products they sell. This step was added because the Match Suppliers step requires products to exist in order to create vendor-product associations. This step is optional.
+
+### 7. Upload existing Purchase orders
 
 User can upload excel or csv file with purchase orders. This step is optional. This step is unlocked only after Vendors have been added into the app.
 
-### 6. Match suppliers and products
+### 8. Match suppliers and products
 
-User can choose, which vendors can be used as suppliers. This step is optional.
+User can choose, which vendors can be used as suppliers. This step is optional. This step is unlocked only after both Vendors and Products have been added into the app.
 
-### 7. Set bundles
+### 9. Set bundles
 
 User can upload an excel or csv file, which will be used to import bundles. This step is optional.
 
-### 8. Set integrations
+### 10. Set integrations
 
 User can add and configure integrations. User selects from a predefined list. Additionaly, use can request a new integration.
 
@@ -47,7 +55,7 @@ User can add and configure integrations. User selects from a predefined list. Ad
 
 ## Company
 
-The core model representing the ecommerce platform. Stores company-level configuration such as lead time, stock days, and forecasting days. The available onboarding steps are defined as constants on this model, while their completion status is tracked via the `OnboardingStep` model.
+The core model representing the ecommerce platform. Stores company-level configuration such as lead time, stock days, and forecasting days. All onboarding step metadata — names, order, mandatory flag, and file upload requirements — is defined in a single `ONBOARDING_STEP_CONFIG` hash on this model. This serves as the single source of truth, consumed by both the onboarding status endpoint and individual step controllers. Completion status is tracked via the `OnboardingStep` model.
 
 ## OnboardingStep
 
@@ -87,7 +95,7 @@ My understanding is that a vendor is meant as a supplier who can supply specific
 
 ## OnboardingFileUpload
 
-Used to store files uploaded during onboarding, so that they can be processed in the background (assuming that files can get big enough that processing them synchronously would take too long). File size is limited to 10 MB. A background job is enqueued after upload to handle processing.
+Used to store files uploaded during onboarding, so that they can be processed in the background (assuming that files can get big enough that processing them synchronously would take too long). File size is limited to 10 MB. Files are uploaded via a single dedicated endpoint (`POST /api/v1/onboarding/file_uploads`), which validates content type and size, and enqueues the appropriate background job. Onboarding steps that require file uploads can only be completed after a file has been uploaded for that step, keeping the step controllers focused solely on marking completion. An `error_message` text field stores actionable feedback when processing fails, so the frontend can display what went wrong to the user.
 
 ## IntegrationRequest
 
@@ -131,9 +139,10 @@ GET /api/v1/onboarding
     "completed": false,
     "current_step": "lead_time",
     "steps": [
-      { "name": "welcome", "position": 0, "status": "completed", "mandatory": false, "locked": false, "lock_reason": null },
-      { "name": "lead_time", "position": 1, "status": "pending", "mandatory": true, "locked": false, "lock_reason": null },
-      { "name": "upload_pos", "position": 6, "status": "pending", "mandatory": false, "locked": true, "lock_reason": "Requires vendors to be added first" }
+      { "name": "welcome", "position": 0, "status": "completed", "mandatory": false, "locked": false, "lock_reason": null, "unlock_steps": null },
+      { "name": "lead_time", "position": 1, "status": "pending", "mandatory": true, "locked": false, "lock_reason": null, "unlock_steps": null },
+      { "name": "upload_pos", "position": 6, "status": "pending", "mandatory": false, "locked": true, "lock_reason": "Complete 'Add Vendors' to unlock this step", "unlock_steps": [{ "name": "add_vendors", "status": "pending" }], "file_upload": null },
+      { "name": "bundles", "position": 8, "status": "pending", "mandatory": false, "locked": false, "lock_reason": null, "unlock_steps": null, "file_upload": { "id": 1, "processing_status": "completed", "error_message": null, "created_at": "2026-03-16T10:00:00Z" } }
     ]
   }
 }
@@ -159,24 +168,6 @@ PATCH /api/v1/onboarding/welcome
 {
   "step": { "name": "welcome", "status": "completed" },
   "company": { "id": 1, "name": "Acme Corp", "lead_days": null, "stock_days": null, "forecasting_days": null }
-}
-```
-
-### `PATCH /api/v1/onboarding/welcome/skip`
-
-Skips the welcome step. Only available for non-mandatory steps.
-
-**Params:** none
-
-**Request:**
-```
-PATCH /api/v1/onboarding/welcome/skip
-```
-
-**Response:**
-```json
-{
-  "step": { "name": "welcome", "status": "skipped" }
 }
 ```
 
@@ -267,15 +258,13 @@ Marks the add products step as completed.
 
 ### `PATCH /api/v1/onboarding/upload_pos`
 
-Uploads a CSV or Excel file (max 10 MB) containing purchase orders and completes the step. This step is locked until vendors have been added. The uploaded file is stored and a background job (`PurchaseOrderImportJob`) is enqueued to process it asynchronously. The processing status can be polled via `GET /api/v1/onboarding/file_uploads/:id`.
+Marks the upload purchase orders step as completed. This step is locked until vendors have been added. A file must have been uploaded via `POST /api/v1/onboarding/file_uploads` (with `step=upload_pos`) before this step can be completed.
 
-**Params:** `file` (file, required — CSV, XLS, or XLSX)
+**Params:** none
 
 **Request:**
 ```
 PATCH /api/v1/onboarding/upload_pos
-Content-Type: multipart/form-data
-file=<uploaded_file>
 ```
 
 **Response:**
@@ -288,39 +277,23 @@ file=<uploaded_file>
 
 **Error when locked:**
 ```json
-{ "error": "Step is locked", "lock_reason": "Requires vendors to be added first" }
+{ "error": "Step is locked", "lock_reason": "Complete 'Add Vendors' to unlock this step" }
 ```
 
-**Error when file missing:**
+**Error when no file uploaded:**
 ```json
-{ "error": "File is required" }
-```
-
-**Error when invalid file type:**
-```json
-{ "error": "Invalid file type. Allowed types: CSV, XLS, XLSX" }
-```
-
-**Error when file too large:**
-```json
-{ "error": "File is too large (maximum is 10 MB)" }
+{ "error": "File must be uploaded before completing this step. Use POST /api/v1/onboarding/file_uploads to upload." }
 ```
 
 ### `PATCH /api/v1/onboarding/match_suppliers`
 
-Assigns vendors to products and marks the match suppliers step as completed. The assignments parameter is optional — if omitted, the step is simply marked as completed without changing any product-vendor associations.
+Marks the match suppliers step as completed. This step is locked until both vendors and products have been added. Vendor-to-product assignments are handled separately via `PATCH /api/v1/products/assign_vendors`, keeping the onboarding controller responsible only for step completion.
 
-**Params:** `assignments` (array, optional) — each element: `{ product_id, vendor_ids }`
+**Params:** none
 
 **Request:**
-```json
+```
 PATCH /api/v1/onboarding/match_suppliers
-{
-  "assignments": [
-    { "product_id": 1, "vendor_ids": [1, 2] },
-    { "product_id": 2, "vendor_ids": [3] }
-  ]
-}
 ```
 
 **Response:**
@@ -331,22 +304,20 @@ PATCH /api/v1/onboarding/match_suppliers
 }
 ```
 
-**Error when product/vendor not found:**
+**Error when locked:**
 ```json
-{ "error": "Some vendor IDs do not belong to this company" }
+{ "error": "Step is locked", "lock_reason": "Complete 'Add Vendors' and 'Add Products' to unlock this step" }
 ```
 
 ### `PATCH /api/v1/onboarding/bundles`
 
-Uploads a CSV or Excel file (max 10 MB) containing bundles and completes the step. The uploaded file is stored and a background job (`BundleImportJob`) is enqueued to process it asynchronously. The processing status can be polled via `GET /api/v1/onboarding/file_uploads/:id`.
+Marks the bundles step as completed. A file must have been uploaded via `POST /api/v1/onboarding/file_uploads` (with `step=bundles`) before this step can be completed.
 
-**Params:** `file` (file, required — CSV, XLS, or XLSX)
+**Params:** none
 
 **Request:**
 ```
 PATCH /api/v1/onboarding/bundles
-Content-Type: multipart/form-data
-file=<uploaded_file>
 ```
 
 **Response:**
@@ -357,19 +328,9 @@ file=<uploaded_file>
 }
 ```
 
-**Error when file missing:**
+**Error when no file uploaded:**
 ```json
-{ "error": "File is required" }
-```
-
-**Error when invalid file type:**
-```json
-{ "error": "Invalid file type. Allowed types: CSV, XLS, XLSX" }
-```
-
-**Error when file too large:**
-```json
-{ "error": "File is too large (maximum is 10 MB)" }
+{ "error": "File must be uploaded before completing this step. Use POST /api/v1/onboarding/file_uploads to upload." }
 ```
 
 ### `PATCH /api/v1/onboarding/set_integrations`
@@ -380,15 +341,15 @@ Marks the integrations step as completed.
 
 ### Skip endpoints
 
-All optional steps support `PATCH /api/v1/onboarding/{step_name}/skip`. Available for: `welcome`, `add_vendors`, `add_products`, `upload_pos`, `match_suppliers`, `bundles`, `set_integrations`. Mandatory steps (`lead_time`, `stock_days`, `forecasting_period`) return an error when skip is attempted.
+All optional steps support `PATCH /api/v1/onboarding/{step_name}/skip`. Available for: `add_vendors`, `add_products`, `upload_pos`, `match_suppliers`, `bundles`, `set_integrations`. Mandatory steps (`lead_time`, `stock_days`, `forecasting_period`) return an error when skip is attempted. The welcome step does not have a skip endpoint — completing and skipping a display-only step are semantically identical, so only the complete endpoint is provided.
 
 ## File Uploads
 
 ### `POST /api/v1/onboarding/file_uploads`
 
-Uploads a file for a specific onboarding step (purchase orders or bundles).
+Uploads a file for a specific onboarding step (purchase orders or bundles). This is the single endpoint for all onboarding file uploads. Validates file presence, content type (CSV, XLS, XLSX), and file size (max 10 MB). After a successful upload, a background job is enqueued to process the file (`PurchaseOrderImportJob` for `upload_pos`, `BundleImportJob` for `bundles`). The corresponding onboarding step can only be marked as completed after a file has been uploaded through this endpoint. If a file has already been uploaded for the given step, the previous upload is replaced — allowing the user to re-upload before marking the step as done.
 
-**Params:** `step` (string, required — one of: `upload_pos`, `bundles`), `file` (file, required)
+**Params:** `step` (string, required — one of: `upload_pos`, `bundles`), `file` (file, required — CSV, XLS, or XLSX, max 10 MB)
 
 **Request:**
 ```
@@ -404,9 +365,25 @@ step=upload_pos&file=<uploaded_file>
     "id": 1,
     "step": "upload_pos",
     "processing_status": "pending",
+    "error_message": null,
     "created_at": "2026-03-16T10:00:00Z"
   }
 }
+```
+
+**Error when file missing:**
+```json
+{ "error": "File is required" }
+```
+
+**Error when invalid file type:**
+```json
+{ "error": "Invalid file type. Allowed types: CSV, XLS, XLSX" }
+```
+
+**Error when file too large:**
+```json
+{ "error": "File is too large (maximum is 10 MB)" }
 ```
 
 ### `GET /api/v1/onboarding/file_uploads/:id`
@@ -427,6 +404,7 @@ GET /api/v1/onboarding/file_uploads/1
     "id": 1,
     "step": "upload_pos",
     "processing_status": "pending",
+    "error_message": null,
     "created_at": "2026-03-16T10:00:00Z"
   }
 }
@@ -455,6 +433,24 @@ GET /api/v1/vendors
 }
 ```
 
+### `GET /api/v1/vendors/:id`
+
+Returns a single vendor with its associated product IDs.
+
+**Params:** `id` (integer, required — in URL)
+
+**Request:**
+```
+GET /api/v1/vendors/1
+```
+
+**Response:**
+```json
+{
+  "vendor": { "id": 1, "name": "Supplier A", "product_ids": [1, 3, 5] }
+}
+```
+
 ### `POST /api/v1/vendors`
 
 Creates a new vendor for the company.
@@ -473,6 +469,38 @@ POST /api/v1/vendors
   "vendor": { "id": 1, "name": "Supplier A", "product_ids": [] }
 }
 ```
+
+### `PATCH /api/v1/vendors/:id`
+
+Updates a vendor's name.
+
+**Params:** `id` (integer, required — in URL), `vendor[name]` (string, required)
+
+**Request:**
+```json
+PATCH /api/v1/vendors/1
+{ "vendor": { "name": "Updated Supplier A" } }
+```
+
+**Response:**
+```json
+{
+  "vendor": { "id": 1, "name": "Updated Supplier A", "product_ids": [1, 3, 5] }
+}
+```
+
+### `DELETE /api/v1/vendors/:id`
+
+Removes a vendor and its associated product links.
+
+**Params:** `id` (integer, required — in URL)
+
+**Request:**
+```
+DELETE /api/v1/vendors/1
+```
+
+**Response:** `204 No Content`
 
 ## Products
 
@@ -497,6 +525,24 @@ GET /api/v1/products
 }
 ```
 
+### `GET /api/v1/products/:id`
+
+Returns a single product with its associated vendor IDs.
+
+**Params:** `id` (integer, required — in URL)
+
+**Request:**
+```
+GET /api/v1/products/1
+```
+
+**Response:**
+```json
+{
+  "product": { "id": 1, "name": "Widget", "vendor_ids": [1, 2] }
+}
+```
+
 ### `POST /api/v1/products`
 
 Creates a new product for the company.
@@ -515,6 +561,38 @@ POST /api/v1/products
   "product": { "id": 1, "name": "Widget", "vendor_ids": [] }
 }
 ```
+
+### `PATCH /api/v1/products/:id`
+
+Updates a product's name.
+
+**Params:** `id` (integer, required — in URL), `product[name]` (string, required)
+
+**Request:**
+```json
+PATCH /api/v1/products/1
+{ "product": { "name": "Updated Widget" } }
+```
+
+**Response:**
+```json
+{
+  "product": { "id": 1, "name": "Updated Widget", "vendor_ids": [1, 2] }
+}
+```
+
+### `DELETE /api/v1/products/:id`
+
+Removes a product and its associated vendor/bundle links.
+
+**Params:** `id` (integer, required — in URL)
+
+**Request:**
+```
+DELETE /api/v1/products/1
+```
+
+**Response:** `204 No Content`
 
 ### `PATCH /api/v1/products/assign_vendors`
 

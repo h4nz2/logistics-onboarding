@@ -1,16 +1,18 @@
 class Company < ApplicationRecord
-  ONBOARDING_STEPS = %w[
-    welcome
-    lead_time
-    stock_days
-    forecasting_period
-    add_vendors
-    add_products
-    upload_pos
-    match_suppliers
-    bundles
-    integrations
-  ].freeze
+  ONBOARDING_STEP_CONFIG = {
+    "welcome" => { mandatory: false },
+    "lead_time" => { mandatory: true },
+    "stock_days" => { mandatory: true },
+    "forecasting_period" => { mandatory: true },
+    "add_vendors" => { mandatory: false },
+    "add_products" => { mandatory: false },
+    "upload_pos" => { mandatory: false, requires_file_upload: true },
+    "match_suppliers" => { mandatory: false },
+    "bundles" => { mandatory: false, requires_file_upload: true },
+    "set_integrations" => { mandatory: false }
+  }.freeze
+
+  ONBOARDING_STEPS = ONBOARDING_STEP_CONFIG.keys.freeze
 
   has_many :onboarding_steps, dependent: :destroy
   has_many :integrations, dependent: :destroy

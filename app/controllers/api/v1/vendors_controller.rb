@@ -11,6 +11,15 @@ module Api
         }
       end
 
+      def show
+        vendor = @company.vendors.find(params[:id])
+        render json: {
+          vendor: { id: vendor.id, name: vendor.name, product_ids: vendor.product_ids }
+        }
+      rescue ActiveRecord::RecordNotFound
+        render_error("Vendor not found", status: :not_found)
+      end
+
       def create
         vendor = @company.vendors.build(vendor_params)
 
@@ -21,6 +30,27 @@ module Api
         else
           render_error(vendor.errors.full_messages)
         end
+      end
+
+      def update
+        vendor = @company.vendors.find(params[:id])
+        if vendor.update(vendor_params)
+          render json: {
+            vendor: { id: vendor.id, name: vendor.name, product_ids: vendor.product_ids }
+          }
+        else
+          render_error(vendor.errors.full_messages)
+        end
+      rescue ActiveRecord::RecordNotFound
+        render_error("Vendor not found", status: :not_found)
+      end
+
+      def destroy
+        vendor = @company.vendors.find(params[:id])
+        vendor.destroy
+        head :no_content
+      rescue ActiveRecord::RecordNotFound
+        render_error("Vendor not found", status: :not_found)
       end
 
       private
