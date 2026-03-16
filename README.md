@@ -1,3 +1,39 @@
+# Outline
+
+- [Requirements](#requirements)
+  - [Onboarding steps](#onboarding-steps)
+- [Models](#models)
+  - [Entity diagram](#entity-diagram)
+  - [Company](#company)
+  - [OnboardingStep](#onboardingstep)
+  - [Integration](#integration)
+  - [Warehouse](#warehouse)
+  - [PurchaseOrder](#purchaseorder)
+  - [PurchaseOrderItem](#purchaseorderitem)
+  - [Bundle](#bundle)
+  - [Product](#product)
+  - [SalesHistory](#saleshistory)
+  - [Vendor](#vendor)
+  - [OnboardingFileUpload](#onboardingfileupload)
+  - [IntegrationRequest](#integrationrequest)
+- [Background Jobs](#background-jobs)
+  - [Import Jobs](#import-jobs)
+  - [Recalculation Jobs](#recalculation-jobs)
+  - [Step Completion Side Effects](#step-completion-side-effects)
+- [Testing](#testing)
+- [REST API](#rest-api)
+  - [Onboarding Status](#onboarding-status)
+  - [Onboarding Step Endpoints](#onboarding-step-endpoints)
+  - [File Uploads](#file-uploads)
+  - [Sync Progress](#sync-progress)
+  - [Vendors](#vendors)
+  - [Products](#products)
+  - [Integrations](#integrations)
+  - [Integration Requests](#integration-requests)
+- [AI Onboarding Guide](#ai-onboarding-guide)
+
+---
+
 # Requirements
 
 Design backend API for a React frontend, that will allows the user to complete onboarding for his company.
